@@ -1,144 +1,138 @@
-# Popup Handler Agent
+# Valetudo: Intelligent Pop-up Handler for Mobile App Testing
 
 ## Overview
 
-The Popup Handler Agent is a FastAPI-based application designed to analyze mobile screenshots and XML data to detect pop-up dialog boxes on Android devices. It utilizes OpenAI's GPT-4o model to provide intelligent recommendations.
+Valetudo is a powerful FastAPI-based application that automatically detects and analyzes pop-up dialog boxes on Android devices using screenshot analysis and XML parsing. Powered by OpenAI's GPT-4, it provides intelligent recommendations for handling these pop-ups during automated testing.
 
-**Note: This application currently only supports XMLs from Android and is under active development.**
+**Current Status**: Beta version supporting Android XML only. iOS support coming soon.
 
-## Features
+## Key Features
 
-- Flexible input methods for images and XML
-- Pop-up detection from various image sources
-- Mobile screen hierarchy parsing
-- AI-powered intelligent suggestions using OpenAI's GPT-4o
-- Comprehensive API endpoints
+- Automated pop-up detection and analysis
+- Dual input support: Screenshots and XML hierarchy files
+- Intelligent handling suggestions powered by GPT-4
+- RESTful API for seamless integration
+- Detailed element metadata extraction from XML
+- Comprehensive API documentation
 
 ## Prerequisites
 
-- Python
-- OpenAI API Key
+- Python 3.8 or higher
+- OpenAI API key
+- FastAPI
+- uvicorn
+- Pillow (for image processing)
+- requests (for URL handling)
 
 ## Installation
 
 1. Clone the repository:
-
    ```bash
-   git clone https://github.com/qapilotio/agents.git
-   cd popup-handler-agent
+   git clone https://github.com/qapilotio/Valetudo.git
+   cd Valetudo
    ```
 
 2. Install dependencies:
-
    ```bash
    pip install -r requirements.txt
    ```
 
-3. Configure environment variables:
-   - Create a `.env` file
-   - Add OpenAI API key:
+3. Set up environment variables:
+   - Create a `.env` file in the project root
+   - Add your OpenAI API key:
      ```
-     OPENAI_API_KEY="your_openai_api_key"
+     OPENAI_API_KEY=your_openai_api_key
      ```
 
-## Usage
+## Quick Start
 
-1. Start the application:
-
+1. Start the server:
    ```bash
-   uvicorn main:app --host 0.0.0.0 --port 8000
+   uvicorn main:app --host 0.0.0.0 --port 8000 --reload
    ```
 
-2. Access API documentation at `http://localhost:8000/docs`
+2. Access the interactive API documentation:
+   - OpenAPI UI: `http://localhost:8000/docs`
+   - ReDoc UI: `http://localhost:8000/redoc`
 
-## API Endpoints
+## API Reference
 
 ### POST /invoke
 
-- Analyzes mobile screen for pop-ups
-- Supports various image and XML inputs
-- Returns AI-generated analysis
+Analyzes mobile screens for pop-ups and provides handling recommendations.
 
-#### Payload Structure
+#### Request Body
 
-The `/invoke` endpoint accepts a JSON payload with:
+```json
+{
+  "testcase_desc": "Login screen permission popup",
+  "image": "string",  // Optional: File path or URL
+  "xml": "string"     // Optional: File path or URL
+}
+```
 
-| Field          | Type   | Required   | Description                 | Input Options                       |
-| -------------- | ------ | ---------- | --------------------------- | ----------------------------------- |
-| `testcase_dec` | string | Yes        | Test case description       | Free-text description               |
-| `image`        | string | Optional\* | Screen analysis image       | - Local file path<br>- URL to image |
-| `xml`          | string | Optional\* | Mobile screen hierarchy XML | - Local file path<br>- URL to XML   |
-
-**Note: At least `image` or `xml` must be provided. If both are provided, then `xml` will be prioritized and used for analysis.**
+**Note**: Either `image` or `xml` must be provided. When both are present, XML analysis takes precedence.
 
 #### Response Format
 
-Successful response includes:
-
-- `status`: Request success indicator
-- `agent_response`:
-  - `popup_detection`: Pop-up presence ("Yes"/"No")
-  - `suggested_action`: Recommended action
-  - `element_metadata`: Detailed element information (XML input)
-
-#### Sample Output
-
-- **When XML is provided:**
-
-  ```json
-  {
-    "status": "success",
-    "agent_response": {
-      "popup_detection": "Yes",
-      "suggested_action": "Select 'While using the app' to grant permission.",
-      "element_metadata": {
-        "element_type": "Button",
-        "element_details": "Button to allow permission while using the app",
-        "resource_id": "com.android.permissioncontroller:id/permission_allow_foreground_only_button",
-        "bounds": "[152,1345][1128,1513]",
-        "clickable": "True",
-        "class_name": "Button",
-        "text": "While using the app",
-        "xpath": "/hierarchy/android.widget.FrameLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.ScrollView/android.widget.LinearLayout/android.widget.LinearLayout[1]/android.widget.Button[1]"
-      }
+```json
+{
+  "status": "success",
+  "agent_response": {
+    "popup_detection": "Yes/No",
+    "suggested_action": "string",
+    "element_metadata": {  // Only present with XML input
+      "element_type": "string",
+      "element_details": "string",
+      "resource_id": "string",
+      "bounds": "string",
+      "clickable": "boolean",
+      "class_name": "string",
+      "text": "string",
+      "xpath": "string"
     }
   }
-  ```
-
-- **When only an image is provided:**
-
-  ```json
-  {
-    "status": "success",
-    "agent_response": {
-      "popup_detection": "Yes",
-      "suggested_action": "Select 'While using the app' to proceed with login."
-    }
-  }
-  ```
+}
+```
 
 ### GET /health
 
-- Checks application status
+Health check endpoint returning application status.
 
 ## Project Structure
 
-- `main.py`: FastAPI application setup
-- `utils.py`: Utility functions
-- `prompts.py`: AI analysis prompts
-- `llm.py`: OpenAI model initialization
+```
+valetudo/
+├── main.py          # FastAPI application and endpoints
+├── utils.py         # Helper functions and utilities
+├── prompts.py       # GPT-4 prompt templates
+├── llm.py           # OpenAI integration
+├── requirements.txt # Project dependencies
+└── .env            # Environment variables
+```
+
+## Error Handling
+
+The API implements comprehensive error handling for:
+- Invalid input formats
+- Missing required fields
+- Failed API calls
+- Image processing errors
+- XML parsing failures
 
 ## Contributing
 
+We welcome contributions! Please follow these steps:
+
 1. Fork the repository
-2. Create a feature branch
-3. Commit changes
-4. Push to the branch
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## Contact
+## Contact  
 
-For questions or support, please contact [Your Contact Information]
+For questions or support, please contact **[contactus@qapilot.com](mailto:contactus@qapilot.com)**.  
 
 ## License
 
