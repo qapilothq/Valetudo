@@ -61,20 +61,18 @@ async def run_service(request: APIRequest):
 
         ai_msg = llm.invoke(messages)
 
-        # Remove any extraneous formatting like triple backticks if present
+        print(ai_msg)
+
         cleaned_content = ai_msg.content.strip("```json\n").strip("\n```")
 
-        # Attempt to parse the JSON output from the AI message
         try:
             parsed_output = json.loads(cleaned_content)
         except json.JSONDecodeError:
-            # If parsing fails, return the raw content with an error message
             raise HTTPException(status_code=500, detail=f"Failed to parse AI message content as JSON. Content: {ai_msg.content}")
         
         resource_id = parsed_output.get("element_metadata", {}).get("resource_id")
 
-        print("Resource ID:", resource_id)
-        # Return the parsed output in the API response
+
         return {
             "status": "success",
             "agent_response": parsed_output
@@ -88,4 +86,4 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8080)
