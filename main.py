@@ -62,7 +62,7 @@ async def run_service(request: APIRequest):
             processed_xml = extract_popup_details(request.xml)
             messages = [
                 ("system", xml_prompt),
-                ("human", f"test-case description: {request.testcase_dec}"),
+                ("human", f"test-case description: {request.testcase_desc}"),
                 ("human", f'this is the output from the pop-detector: {processed_xml}')
             ]
         
@@ -72,7 +72,7 @@ async def run_service(request: APIRequest):
             processed_xml = extract_popup_details(request.xml_url)
             messages = [
                 ("system", xml_prompt),
-                ("human", f"test-case description: {request.testcase_dec}"),
+                ("human", f"test-case description: {request.testcase_desc}"),
                 ("human", f'this is the output from the pop-detector: {processed_xml}')
             ]
 
@@ -83,7 +83,7 @@ async def run_service(request: APIRequest):
 
             messages = [
                 ("system", image_prompt),
-                ("human", f"test-case description: {request.testcase_dec}"),
+                ("human", f"test-case description: {request.testcase_desc}"),
                 ("human", [
                     {"type": "text", "text": "this is the screenshot of the current screen"},
                     {
@@ -98,7 +98,7 @@ async def run_service(request: APIRequest):
             encoded_image = encode_image(request.image_url)
             messages = [
                 ("system", image_prompt),
-                ("human", f"test-case description: {request.testcase_dec}"),
+                ("human", f"test-case description: {request.testcase_desc}"),
                 ("human", [
                     {"type": "text", "text": "this is the screenshot of the current screen"},
                     {
