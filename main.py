@@ -131,8 +131,10 @@ async def run_service(request: APIRequest):
                     alt_dismissal_reason = method["dismissal_reason"]
                     alt_metadata = processed_xml["interactable_elements"].get(alt_id)
                     if alt_metadata:
-                        alt_metadata["dismissal_reason"] = alt_dismissal_reason
-                        alternative_methods_mapped.append(alt_metadata)
+                        alternative_methods_mapped.append({
+                            "element_metadata": alt_metadata,
+                            "dismissal_reason": alt_dismissal_reason
+                        })
                     else:
                         alternative_methods_mapped.append(method)
                 
