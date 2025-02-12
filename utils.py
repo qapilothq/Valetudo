@@ -4,23 +4,18 @@ import os
 import requests
 from io import BytesIO
 
+
 def extract_popup_details(xml_input):
     """
-    Determines if the given XML represents a popup and extracts its content, actions, and images.
+    Determines if the given XML represents a popup and extracts its context (non-clickable text and images)
+    as well as interactable (clickable) elements.
     
     Args:
-    xml_input (str): XML file path, URL, or XML content representing the screen hierarchy
+        xml_input (str): XML file path, URL, or XML content representing the screen hierarchy
     
-    Returns:
-    dict: A dictionary containing popup details with keys:
-        - 'is_popup': Boolean indicating if the layout is a popup
-        - 'content': List of text elements within the popup
-        - 'actions': List of interactive elements (buttons, clickable items)
-        - 'images': List of image details found in the popup
-        - 'details': Additional metadata about the popup
     """
     try:
-        # Parse XML input
+        # Parse XML input.
         if isinstance(xml_input, str):
             if xml_input.startswith('http://') or xml_input.startswith('https://'):
                 response = requests.get(xml_input)
@@ -35,11 +30,51 @@ def extract_popup_details(xml_input):
         else:
             raise ValueError("Invalid XML input type.")
         
-        # Extract screen dimensions
+        # Extract screen dimensions (default to 0 if not provided).
         screen_width = int(root.get('width', 0))
         screen_height = int(root.get('height', 0))
         
-        # Find potential popup layouts
+        # Result dictionary with context elements (non-clickable) and interactable elements.
+        popup_result = {
+            'is_popup': False,
+            'content': [],               # Non-clickable context elements (text and images)
+            'interactable_elements': {}, # Clickable elements (including clickable images) as a dictionary
+            'details': {}
+        }
+        
+        # Mutable counter for interactable element IDs.
+        element_counter = [1]  # Using a list so inner functions can update it.
+
+        # Helper functions to compute an element's absolute XPath.
+        def find_path_to_target(current, target):
+            if current is target:
+                return [current]
+            for child in list(current):
+                subpath = find_path_to_target(child, target)
+                if subpath is not None:
+                    return [current] + subpath
+            return None
+
+        def compute_xpath_from_path(path):
+            xpath = ''
+            for i, node in enumerate(path):
+                if i == 0:
+                    xpath += f'/{node.tag}'
+                else:
+                    parent = path[i - 1]
+                    # Calculate the position index among siblings with the same tag.
+                    siblings = [c for c in list(parent) if c.tag == node.tag]
+                    index = siblings.index(node) + 1
+                    xpath += f'/{node.tag}[{index}]'
+            return xpath
+
+        def get_xpath(target):
+            path = find_path_to_target(root, target)
+            if path is not None:
+                return compute_xpath_from_path(path)
+            return ''
+
+        # Find potential popup layouts using common XPath queries.
         popup_layouts = [
             './/android.widget.FrameLayout', 
             './/android.app.Dialog', 
@@ -47,22 +82,13 @@ def extract_popup_details(xml_input):
             './/androidx.appcompat.app.AlertDialog'
         ]
         
-        # Result dictionary
-        popup_result = {
-            'is_popup': False,
-            'content': [],
-            'interactable_elements': [],
-            'images': [],
-            'details': {}
-        }
-        
-        # Try different layout searches
+        # Iterate through potential popup layouts.
         for layout_xpath in popup_layouts:
             first_component = root.find(layout_xpath)
             if first_component is None:
                 continue
             
-            # Extract bounds
+            # Extract bounds (expected format: "[x1,y1][x2,y2]").
             bounds = first_component.get('bounds', '')
             try:
                 bounds_parts = bounds.strip('[]').split('][')
@@ -71,21 +97,17 @@ def extract_popup_details(xml_input):
             except (ValueError, IndexError):
                 continue
             
-            # Calculate dimensions and position
+            # Calculate dimensions and center position.
             component_width = x2 - x1
             component_height = y2 - y1
             component_center_x = (x1 + x2) / 2
             component_center_y = (y1 + y2) / 2
             
-            # Popup criteria
+            # Determine if the component qualifies as a popup.
             screen_area = screen_width * screen_height
             component_area = component_width * component_height
-            area_ratio = component_area / screen_area
+            area_ratio = component_area / screen_area if screen_area else 0
             
-            is_centered_x = abs(component_center_x - screen_width/2) < screen_width * 0.2
-            is_centered_y = abs(component_center_y - screen_height/2) < screen_height * 0.2
-            
-            # Check if it's a popup
             if area_ratio < 1:
                 popup_result['is_popup'] = True
                 popup_result['details'] = {
@@ -95,21 +117,26 @@ def extract_popup_details(xml_input):
                     'center_y': component_center_y
                 }
                 
-                # Extract text content
+                # Extraction functions.
                 def extract_text(element):
-                    # Find all elements with text that are not clickable
+                    # Add non-clickable text elements as context (type "text").
                     for elem in element.findall('.//*[@text]'):
                         text = elem.get('text', '')
                         clickable = elem.get('clickable', 'false') == 'true'
-                        
                         if text and not clickable:
-                            popup_result['content'].append(text)
+                            popup_result['content'].append({
+                                'xpath': get_xpath(elem),
+                                'type': 'text',
+                                'text': text
+                            })
                 
                 def extract_actions(element):
+                    # Add clickable elements (all get an element_id).
                     clickable_elements = element.findall('.//*[@clickable="true"]')
-                    
                     for action_elem in clickable_elements:
+                        element_id = str(element_counter[0]) 
                         action_details = {
+                            '_id': element_id,
                             'text': action_elem.get('text', ''),
                             'id': action_elem.get('resource-id', ''),
                             'type': action_elem.tag.split('.')[-1],
@@ -120,40 +147,43 @@ def extract_popup_details(xml_input):
                             'scrollable': action_elem.get('scrollable', 'false') == 'true',
                             'long_clickable': action_elem.get('long-clickable', 'false') == 'true',
                             'password': action_elem.get('password', 'false') == 'true',
-                            'selected': action_elem.get('selected', 'false') == 'true'
+                            'selected': action_elem.get('selected', 'false') == 'true',
+                            'xpath': get_xpath(action_elem),
                         }
-                        popup_result['interactable_elements'].append(action_details)
+                        popup_result['interactable_elements'][element_id] = action_details
+                        element_counter[0] += 1
                 
-                # Extract image details
-                def extract_images(element):
-                    # Image-related XML tags in Android
+                def extract_non_clickable_images(element):
+                    # Look for image-related tags and add non-clickable images as context (type "image").
                     image_tags = [
                         './/android.widget.ImageView',
                         './/android.widget.ImageButton',
                         './/android.widget.Image'
                     ]
-                    
                     for tag in image_tags:
                         for img_elem in element.findall(tag):
-                            img_details = {
+                            if img_elem.get('clickable', 'false') == 'true':
+                                continue  # Already captured as an interactable element.
+                            img_context = {
+                                'xpath': get_xpath(img_elem),
+                                'type': 'image',
                                 'resource_id': img_elem.get('resource-id', ''),
                                 'content_desc': img_elem.get('content-desc', ''),
                                 'bounds': img_elem.get('bounds', '')
                             }
-                            
                             drawable = img_elem.get('src', '')
-                            if drawable or img_details['resource_id'] or img_details['content_desc']:
-                                popup_result['images'].append(img_details)
+                            if drawable or img_context['resource_id'] or img_context['content_desc']:
+                                popup_result['content'].append(img_context)
                 
-                # Apply extraction methods
+                # Apply extraction functions on the found popup component.
                 extract_text(first_component)
                 extract_actions(first_component)
-                extract_images(first_component)
+                extract_non_clickable_images(first_component)
                 
-                print([popup_result])
+                print(popup_result)
                 return popup_result
         
-
+        print(popup_result)
         return popup_result
     
     except ET.ParseError as e:
@@ -161,8 +191,7 @@ def extract_popup_details(xml_input):
         return {
             'is_popup': False,
             'content': [],
-            'actions': [],
-            'images': [],
+            'interactable_elements': {},
             'details': {}
         }
     except Exception as e:
@@ -170,8 +199,7 @@ def extract_popup_details(xml_input):
         return {
             'is_popup': False,
             'content': [],
-            'actions': [],
-            'images': [],
+            'interactable_elements': {},
             'details': {}
         }
     
