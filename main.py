@@ -35,7 +35,7 @@ async def log_requests(request: Request, call_next):
 class APIRequest(BaseModel):
     image: Optional[str] = None  # Base64 encoded image string
     xml: Optional[str] = None    # XML as string
-    testcase_dec: str = 'close the pop up'
+    testcase_desc: str = 'close the pop up'
     xml_url: Optional[str] = None       # Keep URL options for flexibility
     image_url: Optional[str] = None     # Keep URL options for flexibility
 

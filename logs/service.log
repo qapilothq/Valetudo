@@ -1,0 +1,28 @@
+2025-02-12 11:30:16,802 - valetudo - INFO - Incoming request: POST http://127.0.0.1:8000/invoke
+2025-02-12 11:30:17,634 - valetudo - INFO - AI message: {
+  "popup_detection": "No"
+}
+2025-02-12 11:30:17,634 - valetudo - INFO - Parsed output: {'popup_detection': 'No'}
+2025-02-12 11:30:17,635 - valetudo - INFO - Completed request: POST http://127.0.0.1:8000/invoke in 0.8328 seconds
+2025-02-12 11:30:17,635 - valetudo - INFO - Response status: 200
+2025-02-12 11:30:21,985 - valetudo - INFO - Incoming request: POST http://127.0.0.1:8000/invoke
+2025-02-12 11:30:22,038 - valetudo - INFO - XML url: /Users/nihad.u/Desktop/Clones/aiagents/nihad/screens/oredoo3.xml
+2025-02-12 11:30:29,043 - valetudo - INFO - AI message: ```json
+{
+  "popup_detection": "Yes",
+  "suggested_action": "Select 'While using the app' to allow location access during app usage.",
+  "element_metadata": {
+    "element_type": "Button",
+    "element_details": "While using the app",
+    "resource_id": "com.android.permissioncontroller:id/permission_allow_foreground_only_button",
+    "bounds": "[152,1616][1128,1784]",
+    "clickable": "True",
+    "class_name": "Button",
+    "text": "While using the app",
+    "xpath": "/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.ScrollView/android.widget.LinearLayout/android.widget.LinearLayout[2]/android.widget.Button[1]"
+  }
+}
+```
+2025-02-12 11:30:29,044 - valetudo - INFO - Parsed output: {'popup_detection': 'Yes', 'suggested_action': "Select 'While using the app' to allow location access during app usage.", 'element_metadata': {'element_type': 'Button', 'element_details': 'While using the app', 'resource_id': 'com.android.permissioncontroller:id/permission_allow_foreground_only_button', 'bounds': '[152,1616][1128,1784]', 'clickable': 'True', 'class_name': 'Button', 'text': 'While using the app', 'xpath': '/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.ScrollView/android.widget.LinearLayout/android.widget.LinearLayout[2]/android.widget.Button[1]'}}
+2025-02-12 11:30:29,044 - valetudo - INFO - Completed request: POST http://127.0.0.1:8000/invoke in 7.0588 seconds
+2025-02-12 11:30:29,044 - valetudo - INFO - Response status: 200
