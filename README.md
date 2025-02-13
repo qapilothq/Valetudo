@@ -13,6 +13,8 @@ Valetudo is a powerful FastAPI-based application that automatically detects and 
 - Intelligent handling suggestions powered by GPT-4
 - RESTful API for seamless integration
 - Detailed element metadata extraction from XML
+- Priority-based element selection for close icons
+- Multiple dismissal methods with reasoning
 - Comprehensive API documentation
 
 ## Prerequisites
@@ -27,12 +29,14 @@ Valetudo is a powerful FastAPI-based application that automatically detects and 
 ## Installation
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/qapilotio/Valetudo.git
    cd Valetudo
    ```
 
 2. Install dependencies:
+
    ```bash
    pip install -r requirements.txt
    ```
@@ -47,6 +51,7 @@ Valetudo is a powerful FastAPI-based application that automatically detects and 
 ## Quick Start
 
 1. Start the server:
+
    ```bash
    uvicorn main:app --host 0.0.0.0 --port 8000 --reload
    ```
@@ -65,32 +70,67 @@ Analyzes mobile screens for pop-ups and provides handling recommendations.
 
 ```json
 {
-  "testcase_desc": "Login screen permission popup",
-  "image": "string",  // Optional: File path or URL
-  "xml": "string"     // Optional: File path or URL
+  "image": "string", // Optional: Base64 encoded image string
+  "xml": "string", // Optional: XML as string
+  "testcase_desc": "string", // Description of the test case
+  "xml_url": "string", // Optional: XML URL
+  "image_url": "string" // Optional: Image URL
 }
 ```
 
-**Note**: Either `image` or `xml` must be provided. When both are present, XML analysis takes precedence.
+**Note**: Either direct input (`image`/`xml`) or URL input (`image_url`/`xml_url`) must be provided.
 
 #### Response Format
+
+For XML input:
 
 ```json
 {
   "status": "success",
   "agent_response": {
-    "popup_detection": "Yes/No",
+    "popup_detection": "True/False",
     "suggested_action": "string",
-    "element_metadata": {  // Only present with XML input
-      "element_type": "string",
-      "element_details": "string",
-      "resource_id": "string",
-      "bounds": "string",
-      "clickable": "boolean",
-      "class_name": "string",
-      "text": "string",
-      "xpath": "string"
-    }
+    "primary_method": {
+      "selection_reason": "string",
+      "element_metadata": {
+        "id": "string",
+        "type": "string",
+        "bounds": "string",
+        "enabled": "boolean",
+        "xpath": "string"
+        // ... other element properties
+      }
+    },
+    "alternative_methods": [
+      {
+        "element_metadata": {
+          // ... element properties
+        },
+        "dismissal_reason": "string"
+      }
+    ]
+  }
+}
+```
+
+For Image input:
+
+```json
+{
+  "status": "success",
+  "agent_response": {
+    "popup_detection": "True/False",
+    "suggested_action": "string",
+    "primary_method": {
+      "element_descriptor": "string", // Natural language description of the element
+      "selection_reason": "string"
+    },
+    "alternate_methods": [
+      {
+        "element_descriptor": "string", // Natural language description of the element
+        "dismissal_reason": "string"
+      }
+    ]
   }
 }
 ```
@@ -114,6 +154,7 @@ valetudo/
 ## Error Handling
 
 The API implements comprehensive error handling for:
+
 - Invalid input formats
 - Missing required fields
 - Failed API calls
@@ -130,9 +171,9 @@ We welcome contributions! Please follow these steps:
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## Contact  
+## Contact
 
-For questions or support, please contact **[contactus@qapilot.com](mailto:contactus@qapilot.com)**.  
+For questions or support, please contact **[contactus@qapilot.com](mailto:contactus@qapilot.com)**.
 
 ## License
 
