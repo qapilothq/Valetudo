@@ -98,10 +98,10 @@ async def run_service(request: APIRequest):
             )
 
         ai_msg = llm.invoke(messages)
-        logger.info(f"AI message: {ai_msg.content}")
+        logger.info(f"AI message: {str(ai_msg.content)}")
 
         # Clean and parse the AI response
-        cleaned_content = ai_msg.content.strip("```json\n").strip("\n```")
+        cleaned_content = str(ai_msg.content).strip("```json\n").strip("\n```")
         try:
             parsed_output = json.loads(cleaned_content)
         except json.JSONDecodeError:
