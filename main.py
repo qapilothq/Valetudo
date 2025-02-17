@@ -105,16 +105,10 @@ async def run_service(request: APIRequest):
             )
 
         ai_msg = llm.invoke(messages)
-        logger.info(f"AI message content: {ai_msg.content}")
+        logger.info(f"AI message: {str(ai_msg.content)}")
 
         # Clean and parse the AI response
-        cleaned_content = ai_msg.content
-        if "```json" in cleaned_content:
-            cleaned_content = cleaned_content[cleaned_content.find("```json")+7:cleaned_content.rfind("```")]
-        elif "```" in cleaned_content:
-            cleaned_content = cleaned_content[cleaned_content.find("```")+3:cleaned_content.rfind("```")]
-        cleaned_content = cleaned_content.strip()
-        
+        cleaned_content = str(ai_msg.content).strip("```json\n").strip("\n```")
         try:
             parsed_output = json.loads(cleaned_content)
         except json.JSONDecodeError:
