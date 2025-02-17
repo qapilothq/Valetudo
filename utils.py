@@ -3,7 +3,8 @@ import base64
 import os
 import requests
 from io import BytesIO
-
+from PIL import Image, ImageDraw, ImageFont
+# import matplotlib.pyplot as plt
 
 def extract_popup_details(xml_input):
     """
@@ -116,72 +117,69 @@ def extract_popup_details(xml_input):
                     'center_x': component_center_x,
                     'center_y': component_center_y
                 }
-                
-                # Extraction functions.
-                def extract_text(element):
-                    # Add non-clickable text elements as context (type "text").
-                    for elem in element.findall('.//*[@text]'):
-                        text = elem.get('text', '')
-                        clickable = elem.get('clickable', 'false') == 'true'
-                        if text and not clickable:
-                            popup_result['content'].append({
-                                'xpath': get_xpath(elem),
-                                'type': 'text',
-                                'text': text
-                            })
-                
-                def extract_actions(element):
-                    # Add clickable elements (all get an element_id).
-                    clickable_elements = element.findall('.//*[@clickable="true"]')
-                    for action_elem in clickable_elements:
-                        element_id = str(element_counter[0]) 
-                        action_details = {
-                            '_id': element_id,
-                            'text': action_elem.get('text', ''),
-                            'id': action_elem.get('resource-id', ''),
-                            'type': action_elem.tag.split('.')[-1],
-                            'bounds': action_elem.get('bounds', ''),
-                            'content_desc': action_elem.get('content-desc', ''),
-                            'enabled': action_elem.get('enabled', 'true') == 'true',
-                            'focused': action_elem.get('focused', 'false') == 'true',
-                            'scrollable': action_elem.get('scrollable', 'false') == 'true',
-                            'long_clickable': action_elem.get('long-clickable', 'false') == 'true',
-                            'password': action_elem.get('password', 'false') == 'true',
-                            'selected': action_elem.get('selected', 'false') == 'true',
-                            'xpath': get_xpath(action_elem),
+            
+            # Extraction functions.
+            def extract_text(element):
+                # Add non-clickable text elements as context (type "text").
+                for elem in element.findall('.//*[@text]'):
+                    text = elem.get('text', '')
+                    clickable = elem.get('clickable', 'false') == 'true'
+                    if text and not clickable:
+                        popup_result['content'].append({
+                            'xpath': get_xpath(elem),
+                            'type': 'text',
+                            'text': text
+                        })
+            
+            def extract_actions(element):
+                # Add clickable elements (all get an element_id).
+                clickable_elements = element.findall('.//*[@clickable="true"]')
+                for action_elem in clickable_elements:
+                    element_id = str(element_counter[0]) 
+                    action_details = {
+                        '_id': element_id,
+                        'text': action_elem.get('text', ''),
+                        'id': action_elem.get('resource-id', ''),
+                        'type': action_elem.tag.split('.')[-1],
+                        'bounds': action_elem.get('bounds', ''),
+                        'content_desc': action_elem.get('content-desc', ''),
+                        'enabled': action_elem.get('enabled', 'true') == 'true',
+                        'focused': action_elem.get('focused', 'false') == 'true',
+                        'scrollable': action_elem.get('scrollable', 'false') == 'true',
+                        'long_clickable': action_elem.get('long-clickable', 'false') == 'true',
+                        'password': action_elem.get('password', 'false') == 'true',
+                        'selected': action_elem.get('selected', 'false') == 'true',
+                        'xpath': get_xpath(action_elem),
+                    }
+                    popup_result['interactable_elements'][element_id] = action_details
+                    element_counter[0] += 1
+            
+            def extract_non_clickable_images(element):
+                # Look for image-related tags and add non-clickable images as context (type "image").
+                image_tags = [
+                    './/android.widget.ImageView',
+                    './/android.widget.ImageButton',
+                    './/android.widget.Image'
+                ]
+                for tag in image_tags:
+                    for img_elem in element.findall(tag):
+                        if img_elem.get('clickable', 'false') == 'true':
+                            continue  # Already captured as an interactable element.
+                        img_context = {
+                            'xpath': get_xpath(img_elem),
+                            'type': 'image',
+                            'resource_id': img_elem.get('resource-id', ''),
+                            'content_desc': img_elem.get('content-desc', ''),
+                            'bounds': img_elem.get('bounds', '')
                         }
-                        popup_result['interactable_elements'][element_id] = action_details
-                        element_counter[0] += 1
-                
-                def extract_non_clickable_images(element):
-                    # Look for image-related tags and add non-clickable images as context (type "image").
-                    image_tags = [
-                        './/android.widget.ImageView',
-                        './/android.widget.ImageButton',
-                        './/android.widget.Image'
-                    ]
-                    for tag in image_tags:
-                        for img_elem in element.findall(tag):
-                            if img_elem.get('clickable', 'false') == 'true':
-                                continue  # Already captured as an interactable element.
-                            img_context = {
-                                'xpath': get_xpath(img_elem),
-                                'type': 'image',
-                                'resource_id': img_elem.get('resource-id', ''),
-                                'content_desc': img_elem.get('content-desc', ''),
-                                'bounds': img_elem.get('bounds', '')
-                            }
-                            drawable = img_elem.get('src', '')
-                            if drawable or img_context['resource_id'] or img_context['content_desc']:
-                                popup_result['content'].append(img_context)
-                
-                # Apply extraction functions on the found popup component.
-                extract_text(first_component)
-                extract_actions(first_component)
-                extract_non_clickable_images(first_component)
-                
-                print(popup_result)
-                return popup_result
+                        drawable = img_elem.get('src', '')
+                        if drawable or img_context['resource_id'] or img_context['content_desc']:
+                            popup_result['content'].append(img_context)
+            
+            # Apply extraction functions on the found component, regardless of popup status.
+            extract_text(first_component)
+            extract_actions(first_component)
+            extract_non_clickable_images(first_component)
         
         print(popup_result)
         return popup_result
@@ -202,7 +200,62 @@ def extract_popup_details(xml_input):
             'interactable_elements': {},
             'details': {}
         }
+
+def annotate_image(base64_image, xml_data):
+    """
+    Annotate the image with bounding boxes and element IDs for all interactable elements.
     
+    Args:
+        base64_image (str): Base64 encoded image string
+        xml_data (dict): Processed XML data containing interactable elements
+        
+    Returns:
+        str: Base64 encoded annotated image
+    """
+
+
+    # Decode base64 image
+
+    print(xml_data)
+    image_data = base64.b64decode(base64_image)
+    image = Image.open(BytesIO(image_data))
+
+    if image.mode == 'RGBA':
+        image = image.convert('RGB')
+    draw = ImageDraw.Draw(image)
+    
+    # Try to load a font, use default if not available
+    try:
+        font = ImageFont.truetype("arial.ttf", 50)
+    except IOError:
+        font = ImageFont.load_default()
+    
+
+    # Draw bounding boxes and element IDs for all interactable elements
+    if xml_data and "interactable_elements" in xml_data:
+        for element_id, element_data in xml_data["interactable_elements"].items():
+            if "bounds" in element_data:
+                bounds = element_data["bounds"]
+                if isinstance(bounds, str):
+                    # Parse bounds string like "[0,0][100,100]"
+                    coords = bounds.replace("][", ",").strip("[]").split(",")
+                    if len(coords) == 4:
+                        x1, y1, x2, y2 = map(int, coords)
+                        # Draw rectangle
+                        draw.rectangle([(x1, y1), (x2, y2)], outline="red", width=3)  # Increased outline width
+                        # Draw element ID
+                        draw.text((x1-30, y1-30), element_id, fill="red", font=font)  # Position text at top-left corner
+
+
+    
+    # plt.figure(figsize=(8, 8))
+    # plt.imshow(image)
+    # plt.axis('off')  # Hide the axis
+    # plt.show()
+    # Convert back to base64
+    buffered = BytesIO()
+    image.save(buffered, format="JPEG")
+    return base64.b64encode(buffered.getvalue()).decode()    
 
 def encode_image(input_source):
     """
