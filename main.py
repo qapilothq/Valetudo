@@ -123,7 +123,7 @@ async def run_service(request: APIRequest):
         if processed_xml and encoded_image:
             # Combined case: Trust LLM's popup detection from image analysis
             if parsed_output.get("popup_detection", "True") == "False":
-                final_response = {"popup_detection": "False"}
+                final_response = {"status": "success", "message": "Popup detected and closed."}
             else:
                 # Map primary method
                 primary_method_ai = parsed_output.get("primary_method", {})
@@ -161,7 +161,7 @@ async def run_service(request: APIRequest):
         elif processed_xml:
             # XML-only case: Check processed_xml for popup detection
             if not processed_xml.get("is_popup", False):
-                final_response = {"popup_detection": "False"}
+                final_response = {"status": "success", "agent_response": {"popup_detection": "False"}}
             else:
                 try:
                     # Primary method mapping
@@ -213,9 +213,16 @@ async def run_service(request: APIRequest):
         logger.info(f"Final response: {final_response}")
         return final_response
     
+    except json.JSONDecodeError as json_exc:
+        logger.error(f"JSON decode error: {str(json_exc)}")
+        return {"status": "error", "message": "Invalid JSON format.", "details": str(json_exc), "code": 400}
+    
+    except HTTPException as http_exc:
+        logger.error(f"HTTP error: {str(http_exc.detail)}")
+        return {"status": "error", "message": str(http_exc.detail), "code": http_exc.status_code}
     except Exception as e:
         logger.error(f"Error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"status": "error", "message": "An unexpected error occurred.", "details": str(e), "code": 500}
 
 @app.get("/health")
 async def health_check():

@@ -8,6 +8,7 @@ Valetudo is a powerful FastAPI-based application that automatically detects and 
 
 ## Key Features
 
+- **Enhanced Pop-up Detection**: Simultaneous processing of image and XML inputs with image annotation for maximum accuracy
 - Automated pop-up detection and analysis
 - Dual input support: Screenshots and XML hierarchy files
 - Intelligent handling suggestions powered by GPT-4
@@ -64,7 +65,7 @@ Valetudo is a powerful FastAPI-based application that automatically detects and 
 
 ### POST /invoke
 
-Analyzes mobile screens for pop-ups and provides handling recommendations.
+Analyzes mobile screens for pop-ups and provides handling recommendations. Supports simultaneous input of both image and XML for enhanced detection accuracy.
 
 #### Request Body
 
@@ -78,9 +79,40 @@ Analyzes mobile screens for pop-ups and provides handling recommendations.
 }
 ```
 
-**Note**: Either direct input (`image`/`xml`) or URL input (`image_url`/`xml_url`) must be provided.
+**Note**: For optimal results, provide both image and XML inputs simultaneously. When both are provided, Valetudo will annotate the image with element IDs from the XML for improved popup detection accuracy.
 
 #### Response Format
+
+For combined image and XML input:
+
+```json
+{
+  "status": "success",
+  "agent_response": {
+    "popup_detection": "True/False",
+    "suggested_action": "string",
+    "primary_method": {
+      "selection_reason": "string",
+      "element_metadata": {
+        "id": "string",
+        "type": "string",
+        "bounds": "string",
+        "enabled": "boolean",
+        "xpath": "string"
+        // ... other element properties
+      }
+    },
+    "alternative_methods": [
+      {
+        "element_metadata": {
+          // ... element properties
+        },
+        "dismissal_reason": "string"
+      }
+    ]
+  }
+}
+```
 
 For XML input:
 
@@ -134,10 +166,6 @@ For Image input:
   }
 }
 ```
-
-### GET /health
-
-Health check endpoint returning application status.
 
 ## Project Structure
 
