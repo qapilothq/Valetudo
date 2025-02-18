@@ -41,6 +41,22 @@ def validate_base64(base64_string: str) -> bool:
         return True
     except Exception:
         return False
+def clean_markdown_json(content):
+    if content.startswith("```json\n"):
+        content = content[8:]
+    elif content.startswith("```json"):
+        content = content[7:]
+    
+    # Remove the closing fence
+    if content.endswith("\n```"):
+        content = content[:-4]
+    elif content.endswith("```"):
+        content = content[:-3]
+    
+    # Fix Python booleans to be JSON compatible
+    content = content.replace("True", "true").replace("False", "false")
+    
+    return content
 
 @app.post("/invoke")
 async def run_service(request: APIRequest):
@@ -108,7 +124,7 @@ async def run_service(request: APIRequest):
         logger.info(f"AI message: {str(ai_msg.content)}")
 
         # Clean and parse the AI response
-        cleaned_content = str(ai_msg.content).strip("```json\n").strip("\n```")
+        cleaned_content = clean_markdown_json(ai_msg.content)
         try:
             parsed_output = json.loads(cleaned_content)
         except json.JSONDecodeError:
@@ -122,7 +138,7 @@ async def run_service(request: APIRequest):
         # Handle response based on inputs and AI output
         if processed_xml and encoded_image:
             # Combined case: Trust LLM's popup detection from image analysis
-            if parsed_output.get("popup_detection", "True") == "False":
+            if parsed_output.get("popup_detection", True) == False:
                 final_response = {"status": "success", "message": "Popup detected and closed."}
             else:
                 # Map primary method
@@ -149,7 +165,7 @@ async def run_service(request: APIRequest):
                 final_response = {
                     "status": "success",
                     "agent_response": {
-                        "popup_detection": "True",
+                        "popup_detection": True,
                         "suggested_action": parsed_output.get("suggested_action", ""),
                         "primary_method": {
                             "selection_reason": primary_selection_reason,
@@ -161,7 +177,7 @@ async def run_service(request: APIRequest):
         elif processed_xml:
             # XML-only case: Check processed_xml for popup detection
             if not processed_xml.get("is_popup", False):
-                final_response = {"status": "success", "agent_response": {"popup_detection": "False"}}
+                final_response = {"status": "success", "agent_response": {"popup_detection": False}}
             else:
                 try:
                     # Primary method mapping
@@ -188,7 +204,7 @@ async def run_service(request: APIRequest):
                     final_response = {
                         "status": "success",
                         "agent_response": {
-                            "popup_detection": parsed_output.get("popup_detection", "True"),
+                            "popup_detection": parsed_output.get("popup_detection", True),
                             "suggested_action": parsed_output.get("suggested_action", ""),
                             "primary_method": {
                                 "selection_reason": primary_selection_reason,

@@ -2,7 +2,7 @@ image_prompt = """
 You are part of a larger QA testing team. Your task is to analyze mobile screenshots to determine if they contain any pop-up dialog boxes.
 If no pop-up is detected, respond with:
 {
-  "popup_detection": "False"
+  "popup_detection": False
 }
 If a pop-up is detected, provide the next-step action in minimal words, directly stating what the execution agent should do next.
 Your suggested action must be supported by the test case description provided to you and be deterministic with no ambiguity.
@@ -13,7 +13,7 @@ Ensure your analysis is thorough and your recommendations are precise.
 
 Please respond in the following format:
 {
-  "popup_detection": "True",
+  "popup_detection": True,
   "suggested_action": "[Your suggested action]",
   "primary_method": {
     "element_descriptor": "[Description or bounding box coordinates of the element]",
@@ -43,7 +43,7 @@ xml_prompt = """
 You are part of a larger QA testing team. Your task is to analyze the output from a system that detects pop-up dialog boxes in mobile screenshots. 
 If no pop-up is detected, respond with:
 {
-  "popup_detection": "False"
+  "popup_detection": False
 }
 If a pop-up is detected, provide the actions in minimal words, directly stating the next step the execution agent should take.
 Suggested action should be supported by the test case description provided to you.
@@ -55,7 +55,7 @@ Ensure that your analysis is thorough and your recommendations are clear and pre
 
 Please respond in the following format:
 {
-  "popup_detection": "True",
+  "popup_detection": True,
   "suggested_action": "[Your suggested action]",
   "primary_method": {
     "_id": "[_id]",
@@ -87,7 +87,7 @@ Your task is to:
 1. Analyze the annotated screenshot to determine if a pop-up dialog box is present.
 2. If no pop-up is detected, respond with:
    {
-     "popup_detection": "False"
+     "popup_detection": False
    }
 3. If a pop-up is detected, use the provided element IDs to select the primary element to interact with for closing the pop-up. Additionally, identify alternative clickable elements.
 4. Provide a minimal, unambiguous suggested action (e.g., "Tap close button") for the execution agent.
@@ -98,7 +98,7 @@ Your task is to:
 Return your output in the following JSON format:
 
 {
-  "popup_detection": "True",
+  "popup_detection": True,
   "suggested_action": "[Your suggested action]",
   "primary_method": {
     "_id": "[_id]",
