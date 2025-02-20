@@ -139,7 +139,7 @@ def extract_popup_details(xml_input):
                     action_details = {
                         '_id': element_id,
                         'text': action_elem.get('text', ''),
-                        'id': action_elem.get('resource-id', ''),
+                        'resouce_id': action_elem.get('resource-id', ''),
                         'type': action_elem.tag.split('.')[-1],
                         'bounds': action_elem.get('bounds', ''),
                         'content_desc': action_elem.get('content-desc', ''),
