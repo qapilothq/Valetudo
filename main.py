@@ -88,6 +88,8 @@ async def run_service(request: APIRequest):
 
         # Case 1: Both image and XML provided
         if encoded_image and processed_xml:
+            logger.info("Both image and XML provided")
+            logger.debug(f"Processed XML: {processed_xml}")
             annotated_image = annotate_image(encoded_image, processed_xml)
             messages = [
                 ("system", combined_prompt),
@@ -139,7 +141,7 @@ async def run_service(request: APIRequest):
         if processed_xml and encoded_image:
             # Combined case: Trust LLM's popup detection from image analysis
             if parsed_output.get("popup_detection", True) == False:
-                final_response = {"status": "success", "message": "Popup detected and closed."}
+                final_response = {"status": "success",  "agent_response": {"popup_detection": False}}
             else:
                 # Map primary method
                 primary_method_ai = parsed_output.get("primary_method", {})
