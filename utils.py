@@ -4,6 +4,8 @@ import os
 import requests
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
+from datetime import datetime
+import uuid
 # import matplotlib.pyplot as plt
 
 def extract_popup_details(xml_input):
@@ -260,9 +262,17 @@ def annotate_image(base64_image, xml_data):
     # Ensure the directory exists
     os.makedirs("screenshot_combined_debug", exist_ok=True)
 
-    # Save the base64 string to a file in the specified folder
-    with open("screenshot_combined_debug/annotated_image_base64.txt", "w") as file:
-        file.write(annotated_base64)
+    # Generate a unique filename using a timestamp and UUID
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    unique_id = uuid.uuid4().hex
+    filename = f"screenshot_combined_debug/annotated_image_{timestamp}_{unique_id}.jpg"
+
+    # Save the annotated image
+    try:
+        image.save(filename)
+        print(f"Annotated image saved as {filename}")
+    except Exception as e:
+        print(f"Error saving annotated image: {e}")
 
     return annotated_base64
 
