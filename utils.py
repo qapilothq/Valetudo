@@ -255,7 +255,16 @@ def annotate_image(base64_image, xml_data):
     # Convert back to base64
     buffered = BytesIO()
     image.save(buffered, format="JPEG")
-    return base64.b64encode(buffered.getvalue()).decode()    
+    annotated_base64 = base64.b64encode(buffered.getvalue()).decode()
+
+    # Ensure the directory exists
+    os.makedirs("screenshot_combined_debug", exist_ok=True)
+
+    # Save the base64 string to a file in the specified folder
+    with open("screenshot_combined_debug/annotated_image_base64.txt", "w") as file:
+        file.write(annotated_base64)
+
+    return annotated_base64
 
 def encode_image(input_source):
     """
