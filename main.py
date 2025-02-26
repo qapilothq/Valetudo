@@ -12,11 +12,21 @@ import os
 import json
 from logger_config import setup_logger
 import time
+from fastapi.middleware.cors import CORSMiddleware
+
 
 logger = setup_logger()
 load_dotenv()
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"], 
+    allow_headers=["*"],  
+)
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
