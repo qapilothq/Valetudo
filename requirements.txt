@@ -1,6 +1,6 @@
 fastapi == 0.115.6   
-langchain-openai == 0.2.12   
-langchain-core ==  0.3.25   
+langchain-openai ==  0.3.6       
+langchain-core ==   0.3.40  
 python-dotenv ==  1.0.1   
 pydantic == 2.10.3    
 requests ==  2.32.3   
