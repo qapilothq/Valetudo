@@ -13,6 +13,7 @@ import json
 from logger_config import setup_logger
 import time
 from fastapi.middleware.cors import CORSMiddleware
+from langsmith import traceable
 
 
 logger = setup_logger()
@@ -68,6 +69,7 @@ def clean_markdown_json(content):
     
     return content
 
+@traceable
 @app.post("/invoke")
 async def run_service(request: APIRequest):
     try:
