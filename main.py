@@ -1,22 +1,16 @@
-from utils import encode_image, extract_popup_details, annotate_image
-from llm import initialize_llm
+from request_processing_utils import process_request_with_image_and_actionable_elements, process_request_with_image_only, process_request_with_xml_only
+from utils import encode_image, extract_popup_details, process_actionable_elements
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from prompts import image_prompt, xml_prompt, combined_prompt
-from typing import Optional
+from typing import Optional, Any
 import base64
-from io import BytesIO
 from dotenv import load_dotenv
-import os
 import json
-from logger_config import setup_logger
+from logger_config import logger
 import time
 from fastapi.middleware.cors import CORSMiddleware
 from langsmith import traceable
 
-
-logger = setup_logger()
 load_dotenv()
 
 app = FastAPI()
@@ -45,6 +39,7 @@ class APIRequest(BaseModel):
     testcase_desc: str = 'close the pop up'
     xml_url: Optional[str] = None      # XML URL option
     image_url: Optional[str] = None    # Image URL option
+    actionable_elements : Optional[list[Any]] = []
 
 def validate_base64(base64_string: str) -> bool:
     try:
@@ -52,35 +47,16 @@ def validate_base64(base64_string: str) -> bool:
         return True
     except Exception:
         return False
-def clean_markdown_json(content):
-    if content.startswith("```json\n"):
-        content = content[8:]
-    elif content.startswith("```json"):
-        content = content[7:]
-    
-    # Remove the closing fence
-    if content.endswith("\n```"):
-        content = content[:-4]
-    elif content.endswith("```"):
-        content = content[:-3]
-    
-    # Fix Python booleans to be JSON compatible
-    content = content.replace("True", "true").replace("False", "false")
-    
-    return content
+
 
 @traceable
 @app.post("/invoke")
 async def run_service(request: APIRequest):
     try:
-        llm_key = os.getenv("OPENAI_API_KEY")
-        if not llm_key:
-            raise HTTPException(status_code=500, detail="API key not found. Please check your environment variables.")
-        llm = initialize_llm(llm_key)
 
         processed_xml = None
         encoded_image = None
-        messages = []
+        actionable_element_dict = {}
 
         # Process image if provided
         if request.image:
@@ -98,148 +74,28 @@ async def run_service(request: APIRequest):
             logger.info(f"XML URL: {request.xml_url}")
             processed_xml = extract_popup_details(request.xml_url)
 
-        # Case 1: Both image and XML provided
-        if encoded_image and processed_xml:
-            logger.info("Both image and XML provided")
-            logger.debug(f"Processed XML: {processed_xml}")
-            annotated_image = annotate_image(encoded_image, processed_xml)
-            messages = [
-                ("system", combined_prompt),
-                ("human", f"Test case description: {request.testcase_desc}"),
-                ("human", [
-                    {"type": "text", "text": "Screenshot of current screen with annotated element IDs"},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{annotated_image}"}}
-                ])
-            ]
+        if request.actionable_elements:
+            actionable_element_dict = process_actionable_elements(request.actionable_elements)
+        elif processed_xml:
+            actionable_element_dict = processed_xml.get("interactable_elements", {})
+
+        # Case 1: Both image and XML or actionable elements provided
+        if encoded_image:
+            if actionable_element_dict:
+                logger.info("Both image and actionable elements available")
+                final_response = process_request_with_image_and_actionable_elements(request=request, encoded_image=encoded_image, actionable_element_dict=actionable_element_dict)
+            # Case 3: Only image provided
+            else:
+                final_response = process_request_with_image_only(request=request, encoded_image=encoded_image)
         # Case 2: Only XML provided
         elif processed_xml:
-            messages = [
-                ("system", xml_prompt),
-                ("human", f"Test case description: {request.testcase_desc}"),
-                ("human", f"Pop-up detector output: {processed_xml}")
-            ]
-        # Case 3: Only image provided
-        elif encoded_image:
-            messages = [
-                ("system", image_prompt),
-                ("human", f"Test case description: {request.testcase_desc}"),
-                ("human", [
-                    {"type": "text", "text": "Screenshot of current screen"},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{encoded_image}"}}
-                ])
-            ]
+            final_response = process_request_with_xml_only(request=request, processed_xml=processed_xml)
         else:
             raise HTTPException(
                 status_code=400,
                 detail="Either XML (string/URL) or image (base64/URL) must be provided."
             )
 
-        ai_msg = llm.invoke(messages)
-        logger.info(f"AI message: {str(ai_msg.content)}")
-
-        # Clean and parse the AI response
-        cleaned_content = clean_markdown_json(ai_msg.content)
-        try:
-            parsed_output = json.loads(cleaned_content)
-        except json.JSONDecodeError:
-            logger.error(f"Failed to parse AI message content as JSON. Content: {ai_msg.content}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to parse AI message content as JSON. Content: {ai_msg.content}"
-            )
-        logger.info(f"Parsed output: {parsed_output}")
-
-        # Handle response based on inputs and AI output
-        if processed_xml and encoded_image:
-            # Combined case: Trust LLM's popup detection from image analysis
-            if parsed_output.get("popup_detection", True) == False:
-                final_response = {"status": "success",  "agent_response": {"popup_detection": False}}
-            else:
-                # Map primary method
-                primary_method_ai = parsed_output.get("primary_method", {})
-                primary_id = primary_method_ai.get("_id", "")
-                primary_selection_reason = primary_method_ai.get("selection_reason", "")
-                primary_metadata = processed_xml.get("interactable_elements", {}).get(primary_id, {})
-                
-                # Map alternative methods
-                alternative_methods_ai = parsed_output.get("alternate_methods", [])
-                alternative_methods_mapped = []
-                for method in alternative_methods_ai:
-                    alt_id = method.get("_id", "")
-                    alt_dismissal_reason = method.get("dismissal_reason", "")
-                    alt_metadata = processed_xml.get("interactable_elements", {}).get(alt_id, {})
-                    if alt_metadata:
-                        alternative_methods_mapped.append({
-                            "element_metadata": alt_metadata,
-                            "dismissal_reason": alt_dismissal_reason
-                        })
-                    else:
-                        alternative_methods_mapped.append(method)
-                
-                final_response = {
-                    "status": "success",
-                    "agent_response": {
-                        "popup_detection": True,
-                        "suggested_action": parsed_output.get("suggested_action", ""),
-                        "primary_method": {
-                            "selection_reason": primary_selection_reason,
-                            "element_metadata": primary_metadata or {}
-                        },
-                        "alternative_methods": alternative_methods_mapped
-                    }
-                }
-        elif processed_xml:
-            # XML-only case: Check processed_xml for popup detection
-            if not processed_xml.get("is_popup", False):
-                final_response = {"status": "success", "agent_response": {"popup_detection": False}}
-            else:
-                try:
-                    # Primary method mapping
-                    primary_method_ai = parsed_output.get("primary_method", {})
-                    primary_id = primary_method_ai.get("_id", "")
-                    primary_selection_reason = primary_method_ai.get("selection_reason", "")
-                    primary_metadata = processed_xml.get("interactable_elements", {}).get(primary_id, {})
-                    
-                    # Alternative methods mapping
-                    alternative_methods_ai = parsed_output.get("alternate_methods", [])
-                    alternative_methods_mapped = []
-                    for method in alternative_methods_ai:
-                        alt_id = method.get("_id", "")
-                        alt_dismissal_reason = method.get("dismissal_reason", "")
-                        alt_metadata = processed_xml.get("interactable_elements", {}).get(alt_id, {})
-                        if alt_metadata:
-                            alternative_methods_mapped.append({
-                                "element_metadata": alt_metadata,
-                                "dismissal_reason": alt_dismissal_reason
-                            })
-                        else:
-                            alternative_methods_mapped.append(method)
-                    
-                    final_response = {
-                        "status": "success",
-                        "agent_response": {
-                            "popup_detection": parsed_output.get("popup_detection", True),
-                            "suggested_action": parsed_output.get("suggested_action", ""),
-                            "primary_method": {
-                                "selection_reason": primary_selection_reason,
-                                "element_metadata": primary_metadata or {}
-                            },
-                            "alternative_methods": alternative_methods_mapped
-                        }
-                    }
-                except KeyError as e:
-                    logger.error(f"Missing key in parsed output: {e}")
-                    raise HTTPException(
-                        status_code=500, 
-                        detail=f"Incomplete response from LLM. Missing key: {e}"
-                    )
-        else:
-            # Image-only case: Return parsed output directly
-            final_response = {
-                "status": "success",
-                "agent_response": parsed_output
-            }
-        
         logger.info(f"Final response: {final_response}")
         return final_response
     
@@ -260,4 +116,4 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8004)

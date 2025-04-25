@@ -29,3 +29,5 @@ def setup_logger():
     logger.addHandler(ch)
 
     return logger
+
+logger = setup_logger()

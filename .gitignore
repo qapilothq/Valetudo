@@ -2,5 +2,5 @@
 __pycache__/
 venv/
 *.log
-logs/
+logs/*
 screenshot_combined_debug/

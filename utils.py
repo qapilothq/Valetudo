@@ -1,3 +1,4 @@
+from typing import Any
 import xml.etree.ElementTree as ET
 import base64
 import os
@@ -6,9 +7,10 @@ from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
 import uuid
+from logger_config import logger
 # import matplotlib.pyplot as plt
 
-def extract_popup_details(xml_input):
+def extract_popup_details(xml_input) -> dict[str, bool | list[Any] | dict[Any, Any]]:
     """
     Determines if the given XML represents a popup and extracts its context (non-clickable text and images)
     as well as interactable (clickable) elements.
@@ -153,7 +155,7 @@ def extract_popup_details(xml_input):
                         'selected': action_elem.get('selected', 'false') == 'true',
                         'xpath': get_xpath(action_elem),
                     }
-                    popup_result['interactable_elements'][element_id] = action_details
+                    popup_result.get('interactable_elements', {})[element_id] = action_details
                     element_counter[0] += 1
             
             def extract_non_clickable_images(element):
@@ -183,11 +185,11 @@ def extract_popup_details(xml_input):
             extract_actions(first_component)
             extract_non_clickable_images(first_component)
         
-        print(popup_result)
+        logger.info(f"XML parsing output to check for popups using rules: {popup_result}")
         return popup_result
     
     except ET.ParseError as e:
-        print(f"XML Parse Error: {e}")
+        logger.error(f"XML Parse Error: {e}")
         return {
             'is_popup': False,
             'content': [],
@@ -195,7 +197,7 @@ def extract_popup_details(xml_input):
             'details': {}
         }
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        logger.error(f"Unexpected error: {e}")
         return {
             'is_popup': False,
             'content': [],
@@ -203,7 +205,110 @@ def extract_popup_details(xml_input):
             'details': {}
         }
 
-def annotate_image(base64_image, xml_data):
+def process_actionable_elements(actionable_elements) -> dict[Any, Any]:
+
+    actionable_element_dict = {}
+
+    for element in actionable_elements:
+
+        element_description = (element.get('text', '') + " " + element.get('contentdesc', '')).strip()
+        if not element_description:
+            element_description = element.get('resourceid').strip()
+        processed_attributes = {
+                "xpath": element.get('xpath', ''),
+                "customxpath": element.get('customxpath', ''),
+                "content_desc": element.get('contentdesc', ''),
+                "resource_id": element.get('resourceid', '')
+            }
+        
+        attributes = element.get('attributes')
+        for attribute in attributes:
+            processed_attributes[attribute['name']] = attribute['value']
+
+        processed_element = {
+            "node_id": element.get('elementId'),
+            "description": element_description,
+            "heuristic_score": 0,
+            "attributes": processed_attributes
+        }
+
+        actionable_element_dict[element.get('elementId')] = processed_element
+
+    return actionable_element_dict
+
+def annotate_image_using_actionable_elements(base64_image, actionable_element_dict):
+    """
+    Annotate the image with bounding boxes and element IDs for all interactable elements.
+    
+    Args:
+        base64_image (str): Base64 encoded image string
+        xml_data (dict): Processed XML data containing interactable elements
+        
+    Returns:
+        str: Base64 encoded annotated image
+    """
+
+
+    # Decode base64 image
+
+    # print(xml_data)
+    image_data = base64.b64decode(base64_image)
+    image = Image.open(BytesIO(image_data))
+
+    if image.mode == 'RGBA':
+        image = image.convert('RGB')
+    draw = ImageDraw.Draw(image)
+    
+    # Try to load a font, use default if not available
+    try:
+        font = ImageFont.truetype("Arial.ttf", 50)
+    except IOError:
+        font = ImageFont.load_default()
+    
+
+    # Draw bounding boxes and element IDs for all interactable elements
+    if actionable_element_dict:
+        for element_id, element_data in actionable_element_dict.items():
+            attributes = element_data.get('attributes', {})
+            if attributes and "bounds" in attributes:
+                bounds = attributes.get("bounds")
+                if isinstance(bounds, str):
+                    # Parse bounds string like "[0,0][100,100]"
+                    coords = bounds.replace("][", ",").strip("[]").split(",")
+                    if len(coords) == 4:
+                        x1, y1, x2, y2 = map(int, coords)
+                        # Draw rectangle
+                        draw.rectangle([(x1, y1), (x2, y2)], outline="red", width=3)  # Increased outline width
+                        # Draw element ID
+                        draw.text((x1-30, y1-30), str(element_id), fill="red", font=font)  # Position text at top-left corner
+
+    # plt.figure(figsize=(8, 8))
+    # plt.imshow(image)
+    # plt.axis('off')  # Hide the axis
+    # plt.show()
+    # Convert back to base64
+    buffered = BytesIO()
+    image.save(buffered, format="JPEG")
+    annotated_base64 = base64.b64encode(buffered.getvalue()).decode()
+
+    # Ensure the directory exists
+    os.makedirs("screenshot_combined_debug", exist_ok=True)
+
+    # Generate a unique filename using a timestamp and UUID
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    unique_id = uuid.uuid4().hex
+    filename = f"screenshot_combined_debug/annotated_image_{timestamp}_{unique_id}.jpg"
+
+    # Save the annotated image
+    try:
+        image.save(filename)
+        print(f"Annotated image saved as {filename}")
+    except Exception as e:
+        print(f"Error saving annotated image: {e}")
+
+    return annotated_base64
+
+def annotate_image_using_xml(base64_image, xml_data):
     """
     Annotate the image with bounding boxes and element IDs for all interactable elements.
     
