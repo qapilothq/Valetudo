@@ -6,6 +6,10 @@ import json
 import os
 from llm import initialize_llm
 from utils import annotate_image_using_actionable_elements, process_actionable_elements
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 llm_key = os.getenv("OPENAI_API_KEY")
 if not llm_key:

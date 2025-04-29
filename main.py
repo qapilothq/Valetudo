@@ -4,14 +4,12 @@ from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 from typing import Optional, Any
 import base64
-from dotenv import load_dotenv
 import json
 from logger_config import logger
 import time
 from fastapi.middleware.cors import CORSMiddleware
 from langsmith import traceable
 
-load_dotenv()
 
 app = FastAPI()
 
