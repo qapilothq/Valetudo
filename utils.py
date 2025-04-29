@@ -272,17 +272,20 @@ def annotate_image_using_actionable_elements(base64_image, actionable_element_di
     if actionable_element_dict:
         for element_id, element_data in actionable_element_dict.items():
             attributes = element_data.get('attributes', {})
+            bounds = None
             if attributes and "bounds" in attributes:
                 bounds = attributes.get("bounds")
-                if isinstance(bounds, str):
-                    # Parse bounds string like "[0,0][100,100]"
-                    coords = bounds.replace("][", ",").strip("[]").split(",")
-                    if len(coords) == 4:
-                        x1, y1, x2, y2 = map(int, coords)
-                        # Draw rectangle
-                        draw.rectangle([(x1, y1), (x2, y2)], outline="red", width=3)  # Increased outline width
-                        # Draw element ID
-                        draw.text((x1-30, y1-30), str(element_id), fill="red", font=font)  # Position text at top-left corner
+            elif "bounds" in element_data:
+                bounds = element_data.get("bounds")
+            if isinstance(bounds, str):
+                # Parse bounds string like "[0,0][100,100]"
+                coords = bounds.replace("][", ",").strip("[]").split(",")
+                if len(coords) == 4:
+                    x1, y1, x2, y2 = map(int, coords)
+                    # Draw rectangle
+                    draw.rectangle([(x1, y1), (x2, y2)], outline="red", width=3)  # Increased outline width
+                    # Draw element ID
+                    draw.text((x1-30, y1-30), str(element_id), fill="red", font=font)  # Position text at top-left corner
 
     # plt.figure(figsize=(8, 8))
     # plt.imshow(image)

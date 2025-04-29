@@ -81,7 +81,7 @@ async def run_service(request: APIRequest):
         if encoded_image:
             if actionable_element_dict:
                 logger.info("Both image and actionable elements available")
-                final_response = process_request_with_image_and_actionable_elements(request=request, encoded_image=encoded_image, actionable_element_dict=actionable_element_dict)
+                final_response = process_request_with_image_and_actionable_elements(testcase_desc=request.testcase_desc, encoded_image=encoded_image, actionable_element_dict=actionable_element_dict)
             # Case 3: Only image provided
             else:
                 final_response = process_request_with_image_only(request=request, encoded_image=encoded_image)

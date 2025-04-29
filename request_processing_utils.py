@@ -134,14 +134,13 @@ def process_request_with_xml_only(request, processed_xml):
 
     return final_response
 
-def process_request_with_image_and_actionable_elements(request, actionable_element_dict, encoded_image):
+def process_request_with_image_and_actionable_elements(testcase_desc, actionable_element_dict, encoded_image):
     logger.info("Both image and actionable elements provided")
-    logger.debug(f"Number of actionable elements: {len(request.actionable_elements)}")
-    actionable_element_dict = process_actionable_elements(request.actionable_elements)
+    logger.debug(f"Number of actionable elements: {len(actionable_element_dict.values())}")
     annotated_image = annotate_image_using_actionable_elements(base64_image=encoded_image, actionable_element_dict=actionable_element_dict)
     messages = [
         ("system", combined_prompt),
-        ("human", f"Test case description: {request.testcase_desc}"),
+        ("human", f"Test case description: {testcase_desc}"),
         ("human", [
             {"type": "text", "text": "Screenshot of current screen with annotated element IDs"},
             {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{annotated_image}"}}

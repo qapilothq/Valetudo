@@ -548,3 +548,75 @@
 2025-04-25 19:38:43,308 - valetudo - INFO - Final response: {'status': 'success', 'message': 'success', 'agent_response': {'popup_detection': False}}
 2025-04-25 19:38:43,310 - valetudo - INFO - Completed request: POST http://127.0.0.1:8004/invoke in 5.5274 seconds
 2025-04-25 19:38:43,310 - valetudo - INFO - Response status: 200
+2025-04-29 16:02:20,474 - valetudo - INFO - Incoming request: POST http://localhost:8004/invoke
+2025-04-29 16:02:25,091 - valetudo - INFO - Image URL: https://stgapp.qapilot.io/screenshots/2/20250220/uploads/5c17979f-fa1d-4634-980a-76e245c577e2x8dg71740030498583.png
+2025-04-29 16:02:28,778 - valetudo - INFO - XML URL: https://stgapp.qapilot.io/screenshots/xml/2/20250220/x6i811740030411457_84759.txt
+2025-04-29 16:02:29,362 - valetudo - INFO - XML parsing output to check for popups using rules: {'is_popup': False, 'content': [], 'interactable_elements': {'1': {'_id': '1', 'text': '', 'resouce_id': 'button-1', 'type': 'Button', 'bounds': '[462,1647][624,1809]', 'content_desc': '', 'enabled': True, 'focused': False, 'scrollable': False, 'long_clickable': False, 'password': False, 'selected': False, 'xpath': '/hierarchy/android.widget.FrameLayout[1]/android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.RelativeLayout[1]/android.webkit.WebView[1]/android.webkit.WebView[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.widget.Button[1]'}, '2': {'_id': '2', 'text': '', 'resouce_id': 'button-2', 'type': 'Button', 'bounds': '[33,474][1053,1632]', 'content_desc': '', 'enabled': True, 'focused': False, 'scrollable': False, 'long_clickable': False, 'password': False, 'selected': False, 'xpath': '/hierarchy/android.widget.FrameLayout[1]/android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.RelativeLayout[1]/android.webkit.WebView[1]/android.webkit.WebView[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.widget.Button[2]'}}, 'details': {}}
+2025-04-29 16:02:55,486 - valetudo - INFO - Both image and actionable elements available
+2025-04-29 16:02:59,148 - valetudo - INFO - Both image and actionable elements provided
+2025-04-29 16:03:00,147 - valetudo - DEBUG - Number of actionable elements: 0
+2025-04-29 16:05:10,360 - valetudo - INFO - Incoming request: POST http://localhost:8004/invoke
+2025-04-29 16:05:14,448 - valetudo - INFO - Image URL: https://stgapp.qapilot.io/screenshots/2/20250220/uploads/5c17979f-fa1d-4634-980a-76e245c577e2x8dg71740030498583.png
+2025-04-29 16:05:16,265 - valetudo - INFO - XML URL: https://stgapp.qapilot.io/screenshots/xml/2/20250220/x6i811740030411457_84759.txt
+2025-04-29 16:05:16,934 - valetudo - INFO - XML parsing output to check for popups using rules: {'is_popup': False, 'content': [], 'interactable_elements': {'1': {'_id': '1', 'text': '', 'resouce_id': 'button-1', 'type': 'Button', 'bounds': '[462,1647][624,1809]', 'content_desc': '', 'enabled': True, 'focused': False, 'scrollable': False, 'long_clickable': False, 'password': False, 'selected': False, 'xpath': '/hierarchy/android.widget.FrameLayout[1]/android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.RelativeLayout[1]/android.webkit.WebView[1]/android.webkit.WebView[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.widget.Button[1]'}, '2': {'_id': '2', 'text': '', 'resouce_id': 'button-2', 'type': 'Button', 'bounds': '[33,474][1053,1632]', 'content_desc': '', 'enabled': True, 'focused': False, 'scrollable': False, 'long_clickable': False, 'password': False, 'selected': False, 'xpath': '/hierarchy/android.widget.FrameLayout[1]/android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.RelativeLayout[1]/android.webkit.WebView[1]/android.webkit.WebView[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.widget.Button[2]'}}, 'details': {}}
+2025-04-29 16:05:22,776 - valetudo - INFO - Both image and actionable elements available
+2025-04-29 16:05:27,440 - valetudo - INFO - Both image and actionable elements provided
+2025-04-29 16:05:28,768 - valetudo - DEBUG - Number of actionable elements: 2
+2025-04-29 16:06:29,541 - valetudo - INFO - AI message: ```json
+{
+  "popup_detection": True,
+  "suggested_action": "Tap close button",
+  "primary_method": {
+    "_id": "close_button_id",
+    "selection_reason": "The close button is the most direct way to dismiss the pop-up."
+  },
+  "alternate_methods": [
+    {
+      "_id": "beli_sekarang_button_id",
+      "dismissal_reason": "This button is for purchasing, not for closing the pop-up."
+    },
+    {
+      "_id": "pesan_sim_button_id",
+      "dismissal_reason": "This button is for ordering a SIM, not for closing the pop-up."
+    }
+  ]
+}
+```
+2025-04-29 16:06:29,541 - valetudo - INFO - Parsed output: {'popup_detection': True, 'suggested_action': 'Tap close button', 'primary_method': {'_id': 'close_button_id', 'selection_reason': 'The close button is the most direct way to dismiss the pop-up.'}, 'alternate_methods': [{'_id': 'beli_sekarang_button_id', 'dismissal_reason': 'This button is for purchasing, not for closing the pop-up.'}, {'_id': 'pesan_sim_button_id', 'dismissal_reason': 'This button is for ordering a SIM, not for closing the pop-up.'}]}
+2025-04-29 16:07:50,458 - valetudo - INFO - Final response: {'status': 'success', 'agent_response': {'popup_detection': True, 'suggested_action': 'Tap close button', 'primary_method': {'selection_reason': 'The close button is the most direct way to dismiss the pop-up.', 'element_metadata': {}}, 'alternative_methods': [{'_id': 'beli_sekarang_button_id', 'dismissal_reason': 'This button is for purchasing, not for closing the pop-up.'}, {'_id': 'pesan_sim_button_id', 'dismissal_reason': 'This button is for ordering a SIM, not for closing the pop-up.'}]}}
+2025-04-29 16:07:50,468 - valetudo - INFO - Completed request: POST http://localhost:8004/invoke in 160.1086 seconds
+2025-04-29 16:07:50,469 - valetudo - INFO - Response status: 200
+2025-04-29 16:08:05,250 - valetudo - INFO - Incoming request: POST http://localhost:8004/invoke
+2025-04-29 16:08:06,987 - valetudo - INFO - Image URL: https://stgapp.qapilot.io/screenshots/2/20250220/uploads/5c17979f-fa1d-4634-980a-76e245c577e2x8dg71740030498583.png
+2025-04-29 16:08:07,255 - valetudo - INFO - XML URL: https://stgapp.qapilot.io/screenshots/xml/2/20250220/x6i811740030411457_84759.txt
+2025-04-29 16:08:07,321 - valetudo - INFO - XML parsing output to check for popups using rules: {'is_popup': False, 'content': [], 'interactable_elements': {'1': {'_id': '1', 'text': '', 'resouce_id': 'button-1', 'type': 'Button', 'bounds': '[462,1647][624,1809]', 'content_desc': '', 'enabled': True, 'focused': False, 'scrollable': False, 'long_clickable': False, 'password': False, 'selected': False, 'xpath': '/hierarchy/android.widget.FrameLayout[1]/android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.RelativeLayout[1]/android.webkit.WebView[1]/android.webkit.WebView[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.widget.Button[1]'}, '2': {'_id': '2', 'text': '', 'resouce_id': 'button-2', 'type': 'Button', 'bounds': '[33,474][1053,1632]', 'content_desc': '', 'enabled': True, 'focused': False, 'scrollable': False, 'long_clickable': False, 'password': False, 'selected': False, 'xpath': '/hierarchy/android.widget.FrameLayout[1]/android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.RelativeLayout[1]/android.webkit.WebView[1]/android.webkit.WebView[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.widget.Button[2]'}}, 'details': {}}
+2025-04-29 16:08:07,322 - valetudo - INFO - Both image and actionable elements available
+2025-04-29 16:08:07,322 - valetudo - INFO - Both image and actionable elements provided
+2025-04-29 16:08:07,322 - valetudo - DEBUG - Number of actionable elements: 2
+2025-04-29 16:11:17,035 - valetudo - INFO - Incoming request: POST http://localhost:8004/invoke
+2025-04-29 16:11:20,849 - valetudo - INFO - Image URL: https://stgapp.qapilot.io/screenshots/2/20250220/uploads/5c17979f-fa1d-4634-980a-76e245c577e2x8dg71740030498583.png
+2025-04-29 16:11:21,000 - valetudo - INFO - XML URL: https://stgapp.qapilot.io/screenshots/xml/2/20250220/x6i811740030411457_84759.txt
+2025-04-29 16:11:21,047 - valetudo - INFO - XML parsing output to check for popups using rules: {'is_popup': False, 'content': [], 'interactable_elements': {'1': {'_id': '1', 'text': '', 'resouce_id': 'button-1', 'type': 'Button', 'bounds': '[462,1647][624,1809]', 'content_desc': '', 'enabled': True, 'focused': False, 'scrollable': False, 'long_clickable': False, 'password': False, 'selected': False, 'xpath': '/hierarchy/android.widget.FrameLayout[1]/android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.RelativeLayout[1]/android.webkit.WebView[1]/android.webkit.WebView[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.widget.Button[1]'}, '2': {'_id': '2', 'text': '', 'resouce_id': 'button-2', 'type': 'Button', 'bounds': '[33,474][1053,1632]', 'content_desc': '', 'enabled': True, 'focused': False, 'scrollable': False, 'long_clickable': False, 'password': False, 'selected': False, 'xpath': '/hierarchy/android.widget.FrameLayout[1]/android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.RelativeLayout[1]/android.webkit.WebView[1]/android.webkit.WebView[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.widget.Button[2]'}}, 'details': {}}
+2025-04-29 16:11:21,048 - valetudo - INFO - Both image and actionable elements available
+2025-04-29 16:11:21,048 - valetudo - INFO - Both image and actionable elements provided
+2025-04-29 16:11:21,049 - valetudo - DEBUG - Number of actionable elements: 2
+2025-04-29 16:12:04,246 - valetudo - INFO - AI message: ```json
+{
+  "popup_detection": True,
+  "suggested_action": "Tap close button",
+  "primary_method": {
+    "_id": "1",
+    "selection_reason": "The element with ID 1 is a close button typically used to dismiss pop-ups."
+  },
+  "alternate_methods": [
+    {
+      "_id": "2",
+      "dismissal_reason": "The element with ID 2 is part of the pop-up content and not intended for closing it."
+    }
+  ]
+}
+```
+2025-04-29 16:12:04,247 - valetudo - INFO - Parsed output: {'popup_detection': True, 'suggested_action': 'Tap close button', 'primary_method': {'_id': '1', 'selection_reason': 'The element with ID 1 is a close button typically used to dismiss pop-ups.'}, 'alternate_methods': [{'_id': '2', 'dismissal_reason': 'The element with ID 2 is part of the pop-up content and not intended for closing it.'}]}
+2025-04-29 16:14:52,788 - valetudo - INFO - Final response: {'status': 'success', 'agent_response': {'popup_detection': True, 'suggested_action': 'Tap close button', 'primary_method': {'selection_reason': 'The element with ID 1 is a close button typically used to dismiss pop-ups.', 'element_metadata': {'_id': '1', 'text': '', 'resouce_id': 'button-1', 'type': 'Button', 'bounds': '[462,1647][624,1809]', 'content_desc': '', 'enabled': True, 'focused': False, 'scrollable': False, 'long_clickable': False, 'password': False, 'selected': False, 'xpath': '/hierarchy/android.widget.FrameLayout[1]/android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.RelativeLayout[1]/android.webkit.WebView[1]/android.webkit.WebView[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.widget.Button[1]'}}, 'alternative_methods': [{'element_metadata': {'_id': '2', 'text': '', 'resouce_id': 'button-2', 'type': 'Button', 'bounds': '[33,474][1053,1632]', 'content_desc': '', 'enabled': True, 'focused': False, 'scrollable': False, 'long_clickable': False, 'password': False, 'selected': False, 'xpath': '/hierarchy/android.widget.FrameLayout[1]/android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.RelativeLayout[1]/android.webkit.WebView[1]/android.webkit.WebView[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.view.View[1]/android.widget.Button[2]'}, 'dismissal_reason': 'The element with ID 2 is part of the pop-up content and not intended for closing it.'}]}}
+2025-04-29 16:14:52,799 - valetudo - INFO - Completed request: POST http://localhost:8004/invoke in 215.7644 seconds
+2025-04-29 16:14:52,799 - valetudo - INFO - Response status: 200
