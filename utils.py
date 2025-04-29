@@ -8,9 +8,11 @@ from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
 import uuid
 from logger_config import logger
+from typing import Any, Union, Dict, List
+
 # import matplotlib.pyplot as plt
 
-def extract_popup_details(xml_input) -> dict[str, bool | list[Any] | dict[Any, Any]]:
+def extract_popup_details(xml_input) -> Dict[str, Union[bool, List[Any], Dict[Any, Any]]]:   
     """
     Determines if the given XML represents a popup and extracts its context (non-clickable text and images)
     as well as interactable (clickable) elements.
