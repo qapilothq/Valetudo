@@ -225,7 +225,8 @@ def process_actionable_elements(actionable_elements) -> dict[Any, Any]:
         
         attributes = element.get('attributes')
         for attribute in attributes:
-            processed_attributes[attribute['name']] = attribute['value']
+            if "name" in attribute and "value" in attribute:
+                processed_attributes[attribute['name']] = attribute['value']
 
         processed_element = {
             "node_id": element.get('elementId'),
