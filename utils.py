@@ -235,7 +235,7 @@ def process_actionable_elements(actionable_elements) -> dict[Any, Any]:
             "attributes": processed_attributes
         }
 
-        actionable_element_dict[element.get('elementId')] = processed_element
+        actionable_element_dict[str(element.get('elementId'))] = processed_element
 
     return actionable_element_dict
 

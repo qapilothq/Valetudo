@@ -158,7 +158,7 @@ def process_request_with_image_and_actionable_elements(testcase_desc, actionable
             primary_method_ai = parsed_output.get("primary_method", {})
             primary_id = primary_method_ai.get("_id", "")
             primary_selection_reason = primary_method_ai.get("selection_reason", "")
-            primary_metadata = actionable_element_dict.get(int(primary_id), {})
+            primary_metadata = actionable_element_dict.get(primary_id, {})
             
             # Map alternative methods
             alternative_methods_ai = parsed_output.get("alternate_methods", [])
