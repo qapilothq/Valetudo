@@ -7,8 +7,9 @@ import base64
 import json
 from logger_config import logger
 import time
+import uuid
 from fastapi.middleware.cors import CORSMiddleware
-from langsmith import traceable
+from langsmith import traceable, get_current_run_tree
 
 
 app = FastAPI()
@@ -32,6 +33,7 @@ async def log_requests(request: Request, call_next):
     return response
 
 class APIRequest(BaseModel):
+    request_id: Optional[str] = uuid.uuid4().hex
     image: Optional[str] = None        # Base64 encoded image string
     xml: Optional[str] = None          # XML as string
     testcase_desc: str = 'close the pop up'
@@ -45,6 +47,33 @@ def validate_base64(base64_string: str) -> bool:
         return True
     except Exception:
         return False
+
+@traceable
+def detect_popup(request, encoded_image, processed_xml, actionable_element_dict):
+
+    rt = get_current_run_tree()
+    if rt:
+        rt.metadata["request_id"] = request.request_id
+    # Case 1: Both image and XML or actionable elements provided
+    if encoded_image:
+        if actionable_element_dict:
+            logger.info("Both image and actionable elements available")
+            final_response = process_request_with_image_and_actionable_elements(testcase_desc=request.testcase_desc, encoded_image=encoded_image, actionable_element_dict=actionable_element_dict)
+        # Case 3: Only image provided
+        else:
+            final_response = process_request_with_image_only(request=request, encoded_image=encoded_image)
+    # Case 2: Only XML provided
+    elif processed_xml:
+        final_response = process_request_with_xml_only(request=request, processed_xml=processed_xml)
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Either XML (string/URL) or image (base64/URL) must be provided."
+        )
+
+    final_response['request_id'] = request.request_id
+    logger.info(f"Final response: {final_response}")
+    return final_response
 
 
 @traceable
@@ -77,25 +106,7 @@ async def run_service(request: APIRequest):
         elif processed_xml:
             actionable_element_dict = processed_xml.get("interactable_elements", {})
 
-        # Case 1: Both image and XML or actionable elements provided
-        if encoded_image:
-            if actionable_element_dict:
-                logger.info("Both image and actionable elements available")
-                final_response = process_request_with_image_and_actionable_elements(testcase_desc=request.testcase_desc, encoded_image=encoded_image, actionable_element_dict=actionable_element_dict)
-            # Case 3: Only image provided
-            else:
-                final_response = process_request_with_image_only(request=request, encoded_image=encoded_image)
-        # Case 2: Only XML provided
-        elif processed_xml:
-            final_response = process_request_with_xml_only(request=request, processed_xml=processed_xml)
-        else:
-            raise HTTPException(
-                status_code=400,
-                detail="Either XML (string/URL) or image (base64/URL) must be provided."
-            )
-
-        logger.info(f"Final response: {final_response}")
-        return final_response
+        return detect_popup(request=request, encoded_image=encoded_image, processed_xml=processed_xml, actionable_element_dict=actionable_element_dict)
     
     except json.JSONDecodeError as json_exc:
         logger.error(f"JSON decode error: {str(json_exc)}")
