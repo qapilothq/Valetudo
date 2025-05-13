@@ -34,6 +34,8 @@ async def log_requests(request: Request, call_next):
 
 class APIRequest(BaseModel):
     request_id: Optional[str] = uuid.uuid4().hex
+    run_id: Optional[str] = None
+    node_id: Optional[str] = None
     image: Optional[str] = None        # Base64 encoded image string
     xml: Optional[str] = None          # XML as string
     testcase_desc: str = 'close the pop up'
@@ -54,6 +56,8 @@ def detect_popup(request, encoded_image, processed_xml, actionable_element_dict)
     rt = get_current_run_tree()
     if rt:
         rt.metadata["request_id"] = request.request_id
+        rt.metadata["run_id"] = request.run_id
+        rt.metadata["node_id"] = request.node_id
     # Case 1: Both image and XML or actionable elements provided
     if encoded_image:
         if actionable_element_dict:
